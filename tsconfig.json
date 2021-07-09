@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "watch": true,
+        "target": "ESNext",
+        "strict": true,
+        "module": "CommonJS",
+        "lib": [
+            "DOM",
+            "ES2020"
+        ]
+    }
+}
