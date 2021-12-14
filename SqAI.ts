@@ -19,23 +19,23 @@ class SQAi {
      * @returns the predicted label
      */
 
-    public predict(testingFeatures:any[]):any[] {
-        var predictions:any[] = [];
+    public predict(testingFeatures:any[], returnProbability:boolean = false):any[] {
+        let predictions:any[] = [];
 
-        var averageFeatures:any = {};
+        let averageFeatures:any = {};
 
-        var indexsOfLabels = this.findAllIndexsOfLabels();
+        let indexsOfLabels = this.findAllIndexsOfLabels();
 
         // get average features
 
-        var labelnames:any[] = [];
+        let labelnames:any[] = [];
 
         for(let label of this.trainingLabels) {
             if(!labelnames.includes(label)) labelnames.push(label);
         }
 
         labelnames.forEach(label => {
-            var sums:any[] = [];
+            let sums:any[] = [];
 
             indexsOfLabels[`${label}`].forEach((index:any) => {
                 if(sums.length === 0) {
@@ -56,30 +56,49 @@ class SQAi {
         });
 
         // predict
+        let probability:any[] = [];
         testingFeatures.forEach((row) => {
-            var results = [];
+            let results = [];
             for (let i = 0; i < row.length; i++) {
                 const feature = row[i];
-                var querys:number[] = [];
-
+                let querys:number[] = [];
+                
                 labelnames.forEach((label) => {
                     const query = feature - averageFeatures[`${label}`][i];
+                    
                     querys.push(query);
-                })                
-
-                var closest = this.FindClosestToZero(querys);
+                })
+                
+                let closest = this.FindClosestToZero(querys);
 
                 results.push(labelnames[closest.index]);
             }
-            predictions.push (this.Mode(results));
+            let [mode, modemap] = this.Mode(results);
+            predictions.push(mode);
+            probability.push(modemap);
         });
 
-        return predictions;
+        if(!returnProbability) return predictions;
+        
+        let finalProbability:any[] = [];
+
+        probability.forEach(e => {
+            let res:any = {};
+            let total:number = Number(Object.values(e).reduce((a:any, b:any) => a+b, 0));
+
+            for(let item in e) {
+                res[`${item}`] = (100/total)*e[item];
+            }
+
+            finalProbability.push(res);
+        });
+
+        return [predictions, finalProbability];
     }
 
     private findAllIndexsOfLabels():any {
-        var indexs:any = {};
-        var labelnames:any[] = [];
+        let indexs:any = {};
+        let labelnames:any[] = [];
 
         for(let label of this.trainingLabels) {
             if(!labelnames.includes(label)) labelnames.push(label);
@@ -102,7 +121,7 @@ class SQAi {
         let closest = Number.MAX_VALUE;
         let index = 0;
 
-        var nums  = numbers.map(x => Math.abs(x));
+        let nums  = numbers.map(x => Math.abs(x));
 
         nums.forEach((num, i) => {
             if(num < closest) {
@@ -114,15 +133,15 @@ class SQAi {
         return {value: numbers[index], index: index};
     }
 
-    private Mode(array:number[]) {
+    private Mode(array:number[]):any {
         if(array.length == 0) return null;
 
-        var modeMap:any = {};
-        var maxEl = array[0], maxCount = 1;
+        let modeMap:any = {};
+        let maxEl = array[0], maxCount = 1;
 
-        for(var i = 0; i < array.length; i++)
+        for(let i = 0; i < array.length; i++)
         {
-            var el = array[i];
+            let el = array[i];
             if(modeMap[el] == null)
                 modeMap[el] = 1;
             else
@@ -133,7 +152,8 @@ class SQAi {
                 maxCount = modeMap[el];
             }
         }
-        return maxEl;
+
+        return [maxEl, modeMap];
     }
 
     /**
@@ -144,7 +164,7 @@ class SQAi {
      */
 
     public accuracy(predictions:any[], labels:any[]) {
-        var a = 0;
+        let a = 0;
     
         predictions.forEach((p, i) => {
             if(p === labels[i]) a += 1;
@@ -154,4 +174,27 @@ class SQAi {
     }
 }
 
+function CsvToJSON (fileContent:string, removeFirstRow=false, removeLastRow=false) {
+    const result:any[] = [];
+    const lines = fileContent.split('\n');
+
+    lines.pop();
+
+    lines.forEach((line:string, i:number) => {
+        if(i === 0 && removeFirstRow) return;
+        if(i === lines.length && removeLastRow) return;
+
+        const cols = line.split(',');
+
+        cols[cols.length - 1] = cols[cols.length - 1].replace(/\r/g, '');
+
+        //result.push(cols.map(x => JSON.parse(x)));
+        result.push(cols);
+    });
+
+    return result;
+}
+
+
 export default SQAi;
+export { CsvToJSON };

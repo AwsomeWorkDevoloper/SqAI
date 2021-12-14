@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="main.js" type="module" defer></script>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas width="500" height="500"></canvas>
+    <form id='image-form'>
+        <input type="text" id="url">
+        <button type="submit">Submit</button>
+    </form>
+    <p id="next-item"></p>
+    <button id='save-test'>Save as training data</button>
+    <button id="test">Predict</button>
+    <br>
+    <h1 id='pred'>Prediction:</h1>
+    <h1>Probability:</h1>
+    <div id='prob'></div>
+</body>
+</html>
